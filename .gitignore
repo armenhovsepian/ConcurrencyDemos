@@ -1,0 +1,102 @@
+# Visual Studio / .NET generated files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+**/bin/
+**/obj/
+artifacts/
+publish/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+packages.lock.json
+nuget.exe
+.nuget/
+
+# Dotnet
+.dotnet/
+project.fragment.lock.json
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# User-specific files
+*.rsuser
+*.DotSettings.user
+
+# IIS Express
+/.vs/**/ApplicationHost.config
+IISExpress/Logs/
+
+# Database files
+*.mdf
+*.ldf
+*.sqlite
+
+# Test results
+TestResults/
+*.trx
+
+# Coverage & profiling
+coverage*
+*.coverage
+*.coveragexml
+*.profiler
+*.vsp
+*.vspx
+
+# Logs
+*.log
+
+# Rider caches
+/.idea/
+/.idea/*
+
+# OS files
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.$RECYCLE.BIN/
+
+# JetBrains Rider
+/.idea/
+/.idea_modules/
+
+# NPM, Yarn
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local tools
+*.local
+
+# Publish output
+/publish
+
+# Temporary files
+*.tmp
+*.temp
+
+# Azure Web App publish settings
+*.PublishSettings
+
+# Sensitive files (user secrets)
+secrets.json
+secrets.*.json
