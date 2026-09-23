@@ -3,83 +3,45 @@
     public static class FireAndForgetHelper
     {
 
-        public static void SafeRun(Action action)
+        // If the async method does some heavy synchronous work before its first await,
+        // that part runs on the calling thread and blocks it.
+        // To push the whole thing onto the thread pool, use Task.Run:
+
+        public static void Run(Action action)
         {
             _ = Task.Run(action);
         }
 
-        public static void SafeRun(Func<Task> func)
+        public static void Run(Func<Task> func)
         {
             _ = Task.Run(func);
         }
 
-        public static void Run(Func<Task> func)
+        public static void SafeRun(Func<Task> func, Action<Exception>? onError = null)
         {
-            try
+            _ = Task.Run(func).ContinueWith(t =>
             {
-                _ = Task.Run(func).ContinueWith(t =>
+                if (t.Exception != null)
                 {
-                    if (t.Exception != null)
-                    {
-                        // Handle exceptions from the background task
-                        Console.WriteLine($"Background task error: {t.Exception}");
-                        //throw Exception()
-                    }
-                }, TaskContinuationOptions.OnlyOnFaulted);
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+                    // Handle exceptions from the background task
+                    Console.WriteLine($"Background task error: {t.Exception}");
+                    onError?.Invoke(t.Exception);
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        public static void Run(Action action)
+        public static void SafeRun(Action action, Action<Exception>? onError = null)
         {
-            try
+            _ = Task.Run(action).ContinueWith(t =>
             {
-                _ = Task.Run(action).ContinueWith(t =>
+                if (t.Exception != null)
                 {
-                    if (t.Exception != null)
-                    {
-                        // Handle exceptions from the background task
-                        Console.WriteLine($"Background task error: {t.Exception}");
-                        //throw Exception()
-                    }
-                }, TaskContinuationOptions.OnlyOnFaulted);
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+                    // Handle exceptions from the background task
+                    Console.WriteLine($"Background task error: {t.Exception}");
+                    onError?.Invoke(t.Exception);
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
-
-        public static async Task FireAndForgetAsync()
-        {
-            await Task.Delay(1000);
-
-            var timeout = DateTime.UtcNow.AddSeconds(10);
-            do
-            {
-                Console.WriteLine($"Running in the background thread with ID {Thread.CurrentThread.ManagedThreadId} at {DateTime.Now.ToString("hh:mm:ss")}!");
-                await Task.Delay(3000);
-            } while (DateTime.UtcNow < timeout);
-        }
-
-
-        public static void FireAndForget()
-        {
-            Thread.Sleep(1000);
-
-            var timeout = DateTime.UtcNow.AddSeconds(10);
-            do
-            {
-                Console.WriteLine($"Running in the background thread with ID {Thread.CurrentThread.ManagedThreadId} at {DateTime.Now.ToString("hh:mm:ss")}!");
-                Thread.Sleep(1000);
-
-                throw new Exception("Background task error");
-
-            } while (DateTime.UtcNow < timeout);
-        }
     }
 }
