@@ -12,6 +12,8 @@ namespace ConcurrencyDemos
 
             //await OnlyOnePattrnDemo();
 
+            //await RunTaskWithCancellationDemo();
+
             Console.WriteLine("Main thread ended...");
 
             Console.ReadLine();
@@ -43,6 +45,49 @@ namespace ConcurrencyDemos
 
             var content = await OnlyOnePatternHelper.RunAsync(tasks);
             Console.WriteLine(content);
+        }
+
+        private static async Task RunTaskWithCancellationDemo()
+        {
+            //await DoSomethingAsync().WithTimeout(TimeSpan.FromSeconds(7));
+
+            var cts = new CancellationTokenSource();
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                Console.WriteLine("Cancelling the task...");
+                cts.Cancel();
+            });
+
+            await DoSomethingAsync().WithCancellation(cts.Token);
+        }
+
+
+        private static async Task RunTaskWithCancellation()
+        {
+            var cts = new CancellationTokenSource();
+            var task1 = Task.Run(async () =>
+            {
+                await Task.Delay(2000);
+                return "Task 1 completed";
+            });
+            var task2 = Task.Run(async () =>
+            {
+                await Task.Delay(1000);
+                return "Task 2 completed";
+            });
+            var result = await task1.WithCancellation(cts.Token);
+            Console.WriteLine(result);
+            try
+            {
+                cts.CancelAfter(500); // Cancel after 500 milliseconds
+                var result2 = await task2.WithCancellation(cts.Token);
+                Console.WriteLine(result2);
+            }
+            catch (OperationCanceledException ex)
+            {
+                Console.WriteLine($"Task was canceled: {ex.Message}");
+            }
         }
 
 
@@ -79,7 +124,7 @@ namespace ConcurrencyDemos
             do
             {
                 Console.WriteLine($"Running in the background thread with ID {Thread.CurrentThread.ManagedThreadId} at {DateTime.Now.ToString("hh:mm:ss")}!");
-                await Task.Delay(3000);
+                await Task.Delay(TimeSpan.FromSeconds(2));
             } while (DateTime.UtcNow < timeout);
 
             Console.WriteLine("Done");
@@ -93,7 +138,7 @@ namespace ConcurrencyDemos
             do
             {
                 Console.WriteLine($"Running in the background thread with ID {Thread.CurrentThread.ManagedThreadId} at {DateTime.Now.ToString("hh:mm:ss")}!");
-                await Task.Delay(1000);
+                await Task.Delay(TimeSpan.FromSeconds(2));
                 throw new Exception($"Background task error in {nameof(DoSomethingWithExceptionAsync)}");
             } while (DateTime.UtcNow < timeout);
         }
@@ -125,4 +170,25 @@ namespace ConcurrencyDemos
             } while (DateTime.UtcNow < timeout);
         }
     }
+
+    //public static class TaskExtensions
+    //{
+    //    public static async Task WithTimeout(this Task task, TimeSpan timeout)
+    //    {
+    //        var delayTask = Task.Delay(timeout);
+    //        var completed = await Task.WhenAny(task, delayTask).ConfigureAwait(false);
+    //        if (completed != task)
+    //            throw new TimeoutException($"The operation has timed out after {timeout}.");
+    //        await task.ConfigureAwait(false);
+    //    }
+
+    //    public static async Task<T> WithTimeout<T>(this Task<T> task, TimeSpan timeout)
+    //    {
+    //        var delayTask = Task.Delay(timeout);
+    //        var completed = await Task.WhenAny(task, delayTask).ConfigureAwait(false);
+    //        if (completed != task)
+    //            throw new TimeoutException($"The operation has timed out after {timeout}.");
+    //        return await task.ConfigureAwait(false);
+    //    }
+    //}
 }

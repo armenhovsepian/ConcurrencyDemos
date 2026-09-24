@@ -2,27 +2,34 @@
 {
     public static class TaskExtensions
     {
+        public static async Task WithTimeout(this Task task, TimeSpan timeout)
+        {
+            var delayTask = Task.Delay(timeout);
+            var completed = await Task.WhenAny(task, delayTask).ConfigureAwait(false);
+            if (completed != task)
+                throw new TimeoutException($"The operation has timed out after {timeout}.");
+            await task.ConfigureAwait(false);
+        }
+
         public static async Task<T> WithTimeout<T>(this Task<T> task, TimeSpan timeout)
         {
-            if (task == await Task.WhenAny(task, Task.Delay(timeout)))
-            {
-                return await task; // Task completed within timeout
-            }
-            else
-            {
-                throw new TimeoutException("The operation has timed out.");
-            }
+            var delayTask = Task.Delay(timeout);
+            var completed = await Task.WhenAny(task, delayTask).ConfigureAwait(false);
+            if (completed != task)
+                throw new TimeoutException($"The operation has timed out after {timeout}.");
+            return await task.ConfigureAwait(false);
         }
 
         public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
         {
-            if (task == await Task.WhenAny(task, Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken)))
+            var completed = await Task.WhenAny(task, Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken));
+            if (task == completed)
             {
-                await task; // Task completed within timeout
+                await task;
             }
             else
             {
-                throw new TimeoutException("The operation has timed out.");
+                throw new OperationCanceledException(cancellationToken);
             }
         }
 
@@ -33,9 +40,10 @@
 
             using (cancellationToken.Register(state => ((TaskCompletionSource<object>)state!).TrySetResult(null), tcs))
             {
-                if (task == await Task.WhenAny(task, tcs.Task))
+                var completed = await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
+                if (task == completed)
                 {
-                    return await task; // Task completed within timeout
+                    return await task;
                 }
                 else
                 {
