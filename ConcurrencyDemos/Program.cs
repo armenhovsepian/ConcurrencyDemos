@@ -12,7 +12,7 @@ namespace ConcurrencyDemos
 
             //await OnlyOnePattrnDemo();
 
-            //await RunTaskWithCancellationDemo();
+            await RunTaskWithCancellationDemo();
 
             Console.WriteLine("Main thread ended...");
 
@@ -52,69 +52,17 @@ namespace ConcurrencyDemos
             //await DoSomethingAsync().WithTimeout(TimeSpan.FromSeconds(7));
 
             var cts = new CancellationTokenSource();
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                Console.WriteLine("Cancelling the task...");
-                cts.Cancel();
-            });
+            cts.CancelAfter(TimeSpan.FromSeconds(5));
+
+            //_ = Task.Run(async () =>
+            //{
+            //    await Task.Delay(TimeSpan.FromSeconds(5));
+            //    Console.WriteLine("Cancelling the task...");
+            //    cts.Cancel();
+            //});
 
             await DoSomethingAsync().WithCancellation(cts.Token);
         }
-
-
-        private static async Task RunTaskWithCancellation()
-        {
-            var cts = new CancellationTokenSource();
-            var task1 = Task.Run(async () =>
-            {
-                await Task.Delay(2000);
-                return "Task 1 completed";
-            });
-            var task2 = Task.Run(async () =>
-            {
-                await Task.Delay(1000);
-                return "Task 2 completed";
-            });
-            var result = await task1.WithCancellation(cts.Token);
-            Console.WriteLine(result);
-            try
-            {
-                cts.CancelAfter(500); // Cancel after 500 milliseconds
-                var result2 = await task2.WithCancellation(cts.Token);
-                Console.WriteLine(result2);
-            }
-            catch (OperationCanceledException ex)
-            {
-                Console.WriteLine($"Task was canceled: {ex.Message}");
-            }
-        }
-
-
-        //private static async Task RunTask()
-        //{
-        //    var task1 = Task.Run(async () =>
-        //    {
-        //        await Task.Delay(2000);
-        //        return "Task 1 completed";
-        //    });
-        //    var task2 = Task.Run(async () =>
-        //    {
-        //        await Task.Delay(1000);
-        //        return "Task 2 completed";
-        //    });
-        //    var result = await task1.WithTimeout(TimeSpan.FromSeconds(3));
-        //    Console.WriteLine(result);
-        //    try
-        //    {
-        //        var result2 = await task2.WithTimeout(TimeSpan.FromSeconds(0.5));
-        //        Console.WriteLine(result2);
-        //    }
-        //    catch (TimeoutException ex)
-        //    {
-        //        Console.WriteLine(ex.Message);
-        //    }
-        //}
 
         private static async Task DoSomethingAsync()
         {
